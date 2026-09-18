@@ -1,0 +1,3 @@
+장수 초상화는 4자리 번호 PNG를 사용합니다.
+예: 0001.png, 0002.png ...
+번호 매칭은 프로젝트 루트의 officer_image_number_mapping.csv를 확인하세요.

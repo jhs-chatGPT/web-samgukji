@@ -1,0 +1,57 @@
+[시작 화면]
+public/resources/title/title-start-bg.png
+
+[세계 지도 / 기존 도시 공통 이미지]
+public/resources/world-map.png
+public/resources/city-icon-small.png
+public/resources/city-icon-medium.png
+public/resources/city-icon-large.png
+public/resources/city-detail-small.png
+public/resources/city-detail-medium.png
+public/resources/city-detail-large.png
+
+[UI]
+public/resources/ui/frame-button.png
+public/resources/ui/frame-modal.png
+public/resources/ui/frame-panel.png
+public/resources/ui/frame-rail.png
+public/resources/ui/frame-topbar.png
+public/resources/ui/icon-books.png
+public/resources/ui/icon-city.png
+public/resources/ui/icon-commerce.png
+public/resources/ui/icon-decree.png
+public/resources/ui/icon-diplomacy.png
+public/resources/ui/icon-document.png
+public/resources/ui/icon-food.png
+public/resources/ui/icon-map.png
+public/resources/ui/icon-military.png
+public/resources/ui/icon-officer.png
+public/resources/ui/icon-people.png
+public/resources/ui/icon-settings.png
+public/resources/ui/icon-smith.png
+public/resources/ui/speed-1x.png
+public/resources/ui/speed-2x.png
+public/resources/ui/speed-4x.png
+public/resources/ui/modal-frame.png
+public/resources/ui/modal-title.png
+
+[시대 이미지 - 추가 예정]
+public/resources/scenarios/yellow-turban.png
+public/resources/scenarios/anti-dongzhuo.png
+public/resources/scenarios/warlords.png
+public/resources/scenarios/guandu.png
+public/resources/scenarios/red-cliffs.png
+public/resources/scenarios/yizhou.png
+public/resources/scenarios/hanzhong.png
+public/resources/scenarios/yiling.png
+public/resources/scenarios/northern-expedition.png
+public/resources/scenarios/wuzhang.png
+
+[장수 이미지 - 번호 매칭]
+초상화: public/resources/officers/portraits/0001.png ...
+전신: public/resources/officers/fullbody/0001.png ...
+상세 매칭: officer_image_number_mapping.csv
+
+[도시 전경 - 추가 예정]
+public/resources/cities/<도시ID>.png
+이미지 없으면 기존 city-detail-* 이미지 사용

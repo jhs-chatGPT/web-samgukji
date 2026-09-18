@@ -1,0 +1,1 @@
+export const MAP_RESOURCE_VERSION = '20260916-2354';

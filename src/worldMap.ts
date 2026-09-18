@@ -1,0 +1,77 @@
+export type WorldMapPosition = { x: number; y: number };
+export type WorldMapRegionLabel = WorldMapPosition & { id: string; name: string };
+export type WorldMapLabelSide = 'below' | 'left' | 'right';
+
+// Percent coordinates rechecked against the user's labeled reference map.
+// Only the major-city set is shown in game, reducing overlap and duplicate regional markers.
+export const WORLD_MAP_POSITIONS: Record<string, WorldMapPosition> = {
+  wuwei: { x: 5.95, y: 24.40 },
+  anding: { x: 18.75, y: 34.60 },
+  tianshui: { x: 14.10, y: 40.20 },
+  chang_an: { x: 23.70, y: 42.15 },
+  hanzhong: { x: 17.00, y: 50.35 },
+  shangyong: { x: 28.15, y: 49.15 },
+  luoyang: { x: 32.45, y: 43.20 },
+  jinyang: { x: 35.20, y: 29.15 },
+  ye: { x: 38.35, y: 31.75 },
+  nanpi: { x: 47.01, y: 28.82 },
+  pingyuan: { x: 43.95, y: 35.19 },
+  ji: { x: 42.32, y: 18.17 },
+  xiangping: { x: 60.95, y: 11.45 },
+  beiping: { x: 52.95, y: 20.15 },
+  beihai: { x: 61.30, y: 32.00 },
+  gungnae: { x: 75.20, y: 20.25 },
+  buyeo: { x: 72.50, y: 8.80 },
+  puyang: { x: 46.20, y: 42.10 },
+  chenliu: { x: 40.95, y: 45.14 },
+  xuchang: { x: 38.54, y: 51.27 },
+  wan: { x: 33.72, y: 55.79 },
+  xinye: { x: 40.85, y: 58.75 },
+  runan: { x: 46.30, y: 57.45 },
+  xiapi: { x: 55.05, y: 45.10 },
+  xiaopei: { x: 50.55, y: 49.10 },
+  shouchun: { x: 52.55, y: 55.00 },
+  guangling: { x: 64.80, y: 54.60 },
+  hefei: { x: 56.10, y: 59.45 },
+  xiangyang: { x: 33.07, y: 65.16 },
+  jiangling: { x: 44.45, y: 69.85 },
+  jiangxia: { x: 49.10, y: 64.20 },
+  lujiang: { x: 51.89, y: 65.51 },
+  jianye: { x: 60.45, y: 66.10 },
+  wu: { x: 67.85, y: 65.90 },
+  chaisang: { x: 50.46, y: 72.34 },
+  kuaiji: { x: 69.10, y: 74.30 },
+  changsha: { x: 41.75, y: 77.35 },
+  wuling: { x: 28.20, y: 80.60 },
+  jiangzhou: { x: 22.59, y: 76.16 },
+  chengdu: { x: 6.38, y: 62.85 },
+  zitong: { x: 10.55, y: 56.60 },
+  yongan: { x: 29.20, y: 68.80 },
+  jianning: { x: 22.60, y: 86.10 },
+  yunnan: { x: 16.70, y: 88.85 },
+  yongchang: { x: 13.61, y: 72.45 },
+  lingling: { x: 35.85, y: 88.75 },
+  guiyang: { x: 44.05, y: 90.10 },
+  mahan: { x: 83.53, y: 39.24 },
+  jinhan: { x: 94.66, y: 49.07 },
+  byeonhan: { x: 88.61, y: 54.51 },
+};
+
+export const WORLD_MAP_LABEL_SIDES: Record<string, WorldMapLabelSide> = {
+  jinyang: 'left', ye: 'right', nanpi: 'right', pingyuan: 'left',
+  luoyang: 'left', chenliu: 'right', puyang: 'right', xuchang: 'left',
+  xinye: 'left', runan: 'right', xiaopei: 'left', xiapi: 'right',
+  shouchun: 'left', hefei: 'right', jiangling: 'left', chaisang: 'right',
+  jiangxia: 'right', lujiang: 'left', jianye: 'left', wu: 'right',
+  changsha: 'right', wuling: 'left', jianning: 'right', yunnan: 'left',
+  mahan: 'left', jinhan: 'left', byeonhan: 'right',
+};
+
+export const WORLD_REGION_LABELS: WorldMapRegionLabel[] = [
+  { id: 'western-regions', name: '서역', x: 6.5, y: 10.5 },
+  { id: 'hexi', name: '하서', x: 16.8, y: 25.5 },
+  { id: 'central-plains', name: '중원', x: 53.8, y: 34.8 },
+  { id: 'liaodong', name: '요동', x: 73.0, y: 10.5 },
+  { id: 'jiangdong', name: '강동', x: 61.0, y: 79.0 },
+  { id: 'nanman', name: '남만', x: 26.0, y: 92.5 },
+];

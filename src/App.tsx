@@ -3802,7 +3802,7 @@ function App() {
           <button disabled={!hasSave} onClick={() => setScreen('game')}>
             이어서하기 {!hasSave && <small>저장 데이터 없음</small>}
           </button>
-          <button onClick={() => setScreen('custom-list')}>신무장 에디터</button>
+          <button onClick={openNewCustomOfficer}>신무장 에디터</button>
           <button onClick={() => openItemEditor()}>아이템 에디터</button>
           <button onClick={() => setScreen('settings')}>설정</button>
         </div>
@@ -3830,7 +3830,7 @@ function App() {
       <div className="manager-screen ornate-manager-screen item-editor-screen-wrap">
         {notice && <div className="toast">{notice}</div>}
         <header className="setup-header item-editor-header">
-          <div><span className="eyebrow">ITEM EDITOR</span><h1>아이템 에디터</h1></div>
+          <div><span className="eyebrow">ITEM EDITOR</span><h1>아이템 에디터</h1><p>게임에 등장하는 아이템을 추가, 수정, 삭제할 수 있습니다.</p></div>
           <button onClick={() => setScreen('title')}>타이틀로</button>
         </header>
 
@@ -3951,6 +3951,7 @@ function App() {
             </div>
           </section>
         </main>
+        <div className="item-editor-footer"><button type="button" onClick={() => flash('아이템 에디터: 카테고리를 선택하고 기본 아이템을 참고해 새 아이템을 제작할 수 있습니다.')}><span>?</span>도움말</button><button type="button" onClick={() => setScreen('title')}><span>×</span>닫기</button></div>
       </div>
     );
   }
@@ -4246,7 +4247,7 @@ function App() {
       <div className="manager-screen ornate-manager-screen">
         {notice && <div className="toast">{notice}</div>}
         <header className="setup-header">
-          <div><span className="eyebrow">CUSTOM OFFICER EDITOR</span><h1>신무장 에디터</h1></div>
+          <div><span className="eyebrow">CUSTOM OFFICER EDITOR</span><h1>신무장 에디터</h1><p>새로운 영웅이, 또 하나의 삼국을 만든다.</p></div>
           <button onClick={() => setScreen('title')}>타이틀로</button>
         </header>
         <main className="custom-list-screen">
@@ -4314,7 +4315,7 @@ function App() {
     return (
       <div className="manager-screen ornate-manager-screen">
         <header className="setup-header">
-          <div><span className="eyebrow">CUSTOM OFFICER EDITOR</span><h1>신무장 에디터</h1></div>
+          <div><span className="eyebrow">CUSTOM OFFICER EDITOR</span><h1>신무장 에디터</h1><p>새로운 영웅이, 또 하나의 삼국을 만든다.</p></div>
           <button onClick={() => setScreen('title')}>타이틀로</button>
         </header>
         <main className="custom-editor-screen">

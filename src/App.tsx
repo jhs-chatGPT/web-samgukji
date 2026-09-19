@@ -89,7 +89,6 @@ type Item = {
   ownerId?: string;
   shop?: boolean;
   custom?: boolean;
-  imageDataUrl?: string;
 };
 type ArmyUnit = { generalId: string; troops: number; troopType: TroopType };
 type ArmyFormation = { id: string; name: string; originCityId: string; targetCityId?: string; battlePlan: 'clash' | 'duel'; units: ArmyUnit[] };
@@ -210,7 +209,6 @@ type CustomOfficer = {
   traits: string[];
   tendencies: string[];
   relations: string[];
-  portraitDataUrl?: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -267,13 +265,6 @@ function officerFullbodyPath(id: string) {
 }
 function cityArtworkPath(city: Pick<City, 'id' | 'tier'>) {
   return `${import.meta.env.BASE_URL}resources/cities/${city.id}.png`;
-}
-
-const ITEM_IMAGE_FALLBACKS: Record<ItemType, string> = { 무기: 'bronze-sword', 갑옷: 'leather-armor', 장신구: 'jade', 말: 'horse', 소모품: 'herb', 장식품: 'silk-ornament', 책: 'art-of-war' };
-function itemImagePath(item: Pick<Item, 'id' | 'type' | 'custom' | 'imageDataUrl'>) {
-  if (item.imageDataUrl) return item.imageDataUrl;
-  const imageId = item.custom ? ITEM_IMAGE_FALLBACKS[item.type] : item.id;
-  return `${import.meta.env.BASE_URL}resources/items/${imageId}.png`;
 }
 
 type DomesticKind = 'commerce' | 'agriculture' | 'security' | 'walls' | 'training' | 'recruit';
@@ -1455,7 +1446,6 @@ function emptyCustomOfficer(): CustomOfficer {
     traits: [],
     tendencies: [],
     relations: [],
-    portraitDataUrl: '',
     createdAt: now,
     updatedAt: now,
   };
@@ -1494,15 +1484,12 @@ function App() {
   const [customItemStat, setCustomItemStat] = useState<CoreStatKey>('martial');
   const [customItemStatValue, setCustomItemStatValue] = useState(1);
   const [customItemError, setCustomItemError] = useState('');
-  const [itemEditorCategory, setItemEditorCategory] = useState<'전체' | ItemType>('전체');
-  const [itemEditorQuery, setItemEditorQuery] = useState('');
   const itemCatalog = [...ITEMS, ...customItems];
   RUNTIME_CUSTOM_ITEMS = customItems;
   const [checkedCustomIds, setCheckedCustomIds] = useState<string[]>([]);
   const [editingCustomId, setEditingCustomId] = useState<string | null>(null);
   const [customDraft, setCustomDraft] = useState<CustomOfficer>(() => emptyCustomOfficer());
   const [customError, setCustomError] = useState('');
-  const [customOfficerSearch, setCustomOfficerSearch] = useState('');
   const [tab, setTab] = useState<Tab>('천하');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -3310,34 +3297,6 @@ function App() {
     setScreen('custom-edit');
   }
 
-  function handleCustomPortraitUpload(file?: File) {
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { setCustomError('이미지 파일만 사용할 수 있습니다.'); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const source = String(reader.result ?? '');
-      const image = new Image();
-      image.onload = () => {
-        const maxWidth = 900;
-        const maxHeight = 1200;
-        const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.width * scale));
-        canvas.height = Math.max(1, Math.round(image.height * scale));
-        const context = canvas.getContext('2d');
-        if (!context) { setCustomError('초상 이미지를 처리하지 못했습니다.'); return; }
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        const portraitDataUrl = canvas.toDataURL('image/jpeg', 0.86);
-        setCustomDraft(current => ({ ...current, portraitDataUrl }));
-        setCustomError('');
-      };
-      image.onerror = () => setCustomError('이미지 파일을 불러오지 못했습니다.');
-      image.src = source;
-    };
-    reader.onerror = () => setCustomError('이미지 파일을 읽지 못했습니다.');
-    reader.readAsDataURL(file);
-  }
-
   function saveCustomOfficer() {
     const name = customDraft.name.trim();
     if (!name) {
@@ -3423,93 +3382,16 @@ function App() {
   }
 
   function openItemEditor(item?: Item) {
-    if (item) {
-      setEditingCustomItemId(item.custom ? item.id : null);
-      setCustomItemDraft({ ...item, bonuses: { ...item.bonuses } });
-      const firstStat = (Object.keys(item.bonuses)[0] as CoreStatKey | undefined) ?? 'martial';
-      setCustomItemStat(firstStat);
-      setCustomItemStatValue(item.bonuses[firstStat] ?? 1);
-    } else {
-      setEditingCustomItemId(null);
-      setCustomItemDraft(emptyCustomItem());
-      setCustomItemStat('martial');
-      setCustomItemStatValue(1);
-    }
-    setCustomItemError('');
-    setScreen('item-editor');
-  }
-
-  function resetItemEditorDraft() {
-    if (editingCustomItemId) {
-      const saved = customItems.find(item => item.id === editingCustomItemId);
-      if (saved) {
-        setCustomItemDraft({ ...saved, bonuses: { ...saved.bonuses } });
-        const firstStat = (Object.keys(saved.bonuses)[0] as CoreStatKey | undefined) ?? 'martial';
-        setCustomItemStat(firstStat);
-        setCustomItemStatValue(saved.bonuses[firstStat] ?? 1);
-        setCustomItemError('');
-        return;
-      }
-    }
-    setCustomItemDraft(emptyCustomItem());
-    setCustomItemStat('martial');
-    setCustomItemStatValue(1);
-    setCustomItemError('');
-  }
-
-  function handleCustomItemImageUpload(file?: File) {
-    if (!file || !file.type.startsWith('image/')) return;
-    if (!customItemDraft.custom && customItemDraft.id) {
-      setCustomItemError('기본 아이템 이미지는 변경할 수 없습니다. 새 항목을 만든 뒤 이미지를 지정하세요.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const image = new Image();
-      image.onload = () => {
-        const maxSize = 720;
-        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.width * scale));
-        canvas.height = Math.max(1, Math.round(image.height * scale));
-        const context = canvas.getContext('2d');
-        if (!context) return;
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.88);
-        setCustomItemDraft(current => ({ ...current, imageDataUrl, custom: true }));
-        setCustomItemError('');
-      };
-      image.src = String(reader.result ?? '');
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function addCustomItemBonus() {
-    const value = Math.max(-10, Math.min(10, Math.floor(customItemStatValue)));
-    if (value === 0) { setCustomItemError('증가치는 0이 아닌 값으로 설정하세요.'); return; }
-    const keys = Object.keys(customItemDraft.bonuses) as CoreStatKey[];
-    if (!keys.includes(customItemStat) && keys.length >= 3) { setCustomItemError('기본 능력 효과는 최대 3개까지 설정할 수 있습니다.'); return; }
-    setCustomItemDraft(current => ({ ...current, bonuses: { ...current.bonuses, [customItemStat]: value } }));
-    setCustomItemError('');
-  }
-
-  function removeCustomItemBonus(key: CoreStatKey) {
-    setCustomItemDraft(current => {
-      const bonuses = { ...current.bonuses };
-      delete bonuses[key];
-      return { ...current, bonuses };
-    });
+    if (item?.custom) { setEditingCustomItemId(item.id); setCustomItemDraft({ ...item, bonuses: { ...item.bonuses } }); const firstStat = (Object.keys(item.bonuses)[0] as CoreStatKey | undefined) ?? 'martial'; setCustomItemStat(firstStat); setCustomItemStatValue(item.bonuses[firstStat] ?? 0); }
+    else { setEditingCustomItemId(null); setCustomItemDraft(emptyCustomItem()); setCustomItemStat('martial'); setCustomItemStatValue(1); }
+    setCustomItemError(''); setScreen('item-editor');
   }
 
   function saveCustomItem() {
-    const name = customItemDraft.name.trim();
-    if (!name) { setCustomItemError('아이템 이름을 입력하세요.'); return; }
-    const id = editingCustomItemId ?? `custom-item-${Date.now()}`;
-    const item: Item = { ...customItemDraft, id, name, custom: true, bonuses: { ...customItemDraft.bonuses }, priceCopper: Math.max(0, Math.floor(customItemDraft.priceCopper)) };
-    setCustomItems(current => editingCustomItemId ? current.map(entry => entry.id === editingCustomItemId ? item : entry) : [...current, item]);
-    setEditingCustomItemId(id);
-    setCustomItemDraft(item);
-    flash(`${name} 아이템 저장 완료`);
+    const name = customItemDraft.name.trim(); if (!name) { setCustomItemError('아이템 이름을 입력하세요.'); return; }
+    const id = editingCustomItemId ?? `custom-item-${Date.now()}`; const statValue = Math.max(0, Math.min(10, Math.floor(customItemStatValue)));
+    const item: Item = { ...customItemDraft, id, name, custom: true, bonuses: statValue > 0 ? { [customItemStat]: statValue } : {}, priceCopper: Math.max(0, Math.floor(customItemDraft.priceCopper)) };
+    setCustomItems(current => editingCustomItemId ? current.map(entry => entry.id === editingCustomItemId ? item : entry) : [...current, item]); setEditingCustomItemId(id); setCustomItemDraft(item); flash(`${name} 아이템 저장 완료`);
   }
 
   function deleteCustomItem() { if (!editingCustomItemId) return; const item = customItems.find(entry => entry.id === editingCustomItemId); if (!item || !window.confirm(`${item.name}을(를) 삭제할까요?`)) return; setCustomItems(current => current.filter(entry => entry.id !== editingCustomItemId)); setEditingCustomItemId(null); setCustomItemDraft(emptyCustomItem()); flash(`${item.name} 삭제 완료`); }
@@ -3802,7 +3684,7 @@ function App() {
           <button disabled={!hasSave} onClick={() => setScreen('game')}>
             이어서하기 {!hasSave && <small>저장 데이터 없음</small>}
           </button>
-          <button onClick={openNewCustomOfficer}>신무장 에디터</button>
+          <button onClick={() => setScreen('custom-list')}>신무장</button>
           <button onClick={() => openItemEditor()}>아이템 에디터</button>
           <button onClick={() => setScreen('settings')}>설정</button>
         </div>
@@ -3812,148 +3694,7 @@ function App() {
   }
 
   if (screen === 'item-editor') {
-    const typeIconMap: Record<ItemType, string> = {
-      무기: 'sword', 갑옷: 'armor', 장신구: 'ring', 말: 'horse', 소모품: 'potion', 장식품: 'ornament', 책: 'book',
-    };
-    const itemCategories = SHOP_CATEGORIES.filter(category => category !== '전체') as ItemType[];
-    const normalizedItemQuery = itemEditorQuery.trim().toLowerCase();
-    const filteredEditorItems = itemCatalog.filter(item => {
-      if (itemEditorCategory !== '전체' && item.type !== itemEditorCategory) return false;
-      if (!normalizedItemQuery) return true;
-      return [item.name, item.type, item.bonus].some(value => value.toLowerCase().includes(normalizedItemQuery));
-    });
-    const previewBonuses = Object.entries(customItemDraft.bonuses ?? {}) as Array<[CoreStatKey, number]>;
-    const activeTypeIcon = typeIconMap[customItemDraft.type] ?? 'sword';
-    const viewingBaseItem = Boolean(customItemDraft.id && !customItemDraft.custom);
-    const displayItemName = customItemDraft.name || '새 아이템';
-    return (
-      <div className="manager-screen ornate-manager-screen item-editor-screen-wrap">
-        {notice && <div className="toast">{notice}</div>}
-        <header className="setup-header item-editor-header">
-          <div><span className="eyebrow">ITEM EDITOR</span><h1>아이템 에디터</h1><p>게임에 등장하는 아이템을 추가, 수정, 삭제할 수 있습니다.</p></div>
-          <button onClick={() => setScreen('title')}>타이틀로</button>
-        </header>
-
-        <main className="item-editor-screen item-editor-screen-v2">
-          <aside className="item-editor-sidebar-v2">
-            <section className="editor-ornate-card item-editor-category-card">
-              <div className="editor-card-head ornate-head"><strong>카테고리</strong></div>
-              <div className="item-category-grid">
-                {itemCategories.map(category => (
-                  <button type="button" key={category} className={`item-category-button ${itemEditorCategory === category ? 'active' : ''}`} onClick={() => setItemEditorCategory(current => current === category ? '전체' : category)}>
-                    <span className={`editor-icon icon-${typeIconMap[category]}`} /><strong>{category}</strong>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <section className="editor-ornate-card item-editor-list-card-v2">
-              <div className="editor-card-head ornate-head"><strong>아이템 목록</strong><span>{filteredEditorItems.length}개</span></div>
-              <div className="editor-search-row item-editor-search-box">
-                <span className="editor-inline-icon icon-search" />
-                <input aria-label="아이템 검색" placeholder="아이템명 검색..." value={itemEditorQuery} onChange={event => setItemEditorQuery(event.target.value)} />
-              </div>
-              <div className="item-editor-list ornate-scroll item-editor-list-v2">
-                {filteredEditorItems.length === 0 ? <div className="custom-empty compact-empty">조건에 맞는 아이템이 없습니다.</div> : filteredEditorItems.map(item => (
-                  <button key={item.id} className={`${customItemDraft.id === item.id ? 'selected' : ''} ${item.custom ? 'custom-item' : 'base-item'}`} onClick={() => openItemEditor(item)}>
-                    <span className="item-editor-thumb"><img src={itemImagePath(item)} alt="" /></span>
-                    <div className="item-editor-list-copy">
-                      <strong>{item.name}</strong>
-                      <span>{item.type} · {item.bonus || '효과 없음'}</span>
-                      <small>{formatMoney(copperToMoney(item.priceCopper))} · {item.custom ? '사용자 제작' : item.unique ? '고유 아이템' : '기본 아이템'}</small>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </section>
-          </aside>
-
-          <section className="editor-ornate-card item-preview-panel item-preview-panel-v2">
-            <div className="editor-card-head ornate-head"><strong>아이템 상세 정보</strong></div>
-            <div className="item-preview-hero">
-              <div className="item-preview-art-frame item-preview-art-frame-v2">
-                <img src={itemImagePath(customItemDraft)} alt={`${displayItemName} 이미지`} />
-                <span className="item-preview-badge">{viewingBaseItem ? (customItemDraft.unique ? '고유' : '기본') : '제작'}</span>
-              </div>
-              <div className="item-preview-copy item-preview-copy-v2">
-                <div className="item-preview-title-row"><span className={`editor-icon icon-${activeTypeIcon}`} /><h2>{displayItemName}</h2></div>
-                <p>{customItemDraft.bonus || '전장과 내정에서 도움이 되는 효과를 가진 아이템입니다.'}</p>
-                <div className="item-preview-meta item-preview-meta-v2">
-                  <div><span>종류</span><strong>{customItemDraft.type}</strong></div>
-                  <div><span>가격</span><strong>{formatMoney(copperToMoney(customItemDraft.priceCopper || 0))}</strong></div>
-                  <div><span>상점 판매</span><strong>{customItemDraft.shop !== false ? '가능' : '불가'}</strong></div>
-                  <div><span>중복 여부</span><strong>{customItemDraft.unique ? '1개 제한' : '복수 보유'}</strong></div>
-                </div>
-              </div>
-            </div>
-            <div className="item-preview-sections item-preview-sections-v2">
-              <section>
-                <h3>기본 효과</h3>
-                <div className="item-effect-list">
-                  {previewBonuses.length > 0 ? previewBonuses.map(([key, value]) => <span key={key}><strong>{CORE_STAT_LABELS[key]}</strong> {value > 0 ? '+' : ''}{value}</span>) : <em>능력치 효과 없음</em>}
-                </div>
-              </section>
-              <section className="item-description-section">
-                <h3>설명</h3>
-                <p>{customItemDraft.bonus || '아직 설명이 없습니다. 오른쪽 편집 영역에서 효과 설명을 입력하면 이곳에 표시됩니다.'}</p>
-              </section>
-            </div>
-          </section>
-
-          <section className="editor-ornate-card item-editor-form-shell item-editor-form-shell-v2">
-            <div className="editor-card-head ornate-head"><strong>아이템 편집</strong></div>
-            <div className={`item-editor-form item-editor-form-v2 ${viewingBaseItem ? 'read-only' : ''}`}>
-              {viewingBaseItem && <div className="item-editor-protected-note">기본 아이템은 보호됩니다. <strong>신규 생성</strong>을 눌러 사용자 아이템을 만든 뒤 편집하세요.</div>}
-              <fieldset className="item-editor-edit-fieldset item-editor-edit-fieldset-v2" disabled={viewingBaseItem}>
-                <div className="item-editor-field-stack">
-                  <label>아이템명<input value={customItemDraft.name} onChange={event => setCustomItemDraft(current => ({ ...current, name: event.target.value }))} /></label>
-                  <div className="item-editor-two-col"><label>종류<select value={customItemDraft.type} onChange={event => setCustomItemDraft(current => ({ ...current, type: event.target.value as ItemType }))}>{itemCategories.map(category => <option key={category}>{category}</option>)}</select></label><label>가격(동)<input type="number" min="0" value={customItemDraft.priceCopper} onChange={event => setCustomItemDraft(current => ({ ...current, priceCopper: Number(event.target.value) }))} /></label></div>
-                </div>
-
-                <section className="item-editor-subsection item-editor-image-section">
-                  <div className="item-editor-subsection-title"><strong>아이콘 이미지</strong></div>
-                  <div className="item-image-editor-row">
-                    <span className="item-image-editor-preview"><img src={itemImagePath(customItemDraft)} alt="" /></span>
-                    <div className="item-image-editor-actions">
-                      <label className="item-image-upload-button"><span className="editor-inline-icon icon-edit" />이미지 변경<input type="file" accept="image/*" onChange={event => { handleCustomItemImageUpload(event.target.files?.[0]); event.currentTarget.value = ''; }} /></label>
-                      <button type="button" onClick={() => setCustomItemDraft(current => ({ ...current, imageDataUrl: '' }))}>기본 이미지</button>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="item-editor-subsection item-bonus-editor">
-                  <div className="item-bonus-editor-head"><strong>기본 능력 효과</strong><span>{Object.keys(customItemDraft.bonuses).length}/3</span></div>
-                  <div className="item-bonus-add-row">
-                    <select value={customItemStat} onChange={event => setCustomItemStat(event.target.value as CoreStatKey)}>{(Object.keys(CORE_STAT_LABELS) as CoreStatKey[]).map(key => <option key={key} value={key}>{CORE_STAT_LABELS[key]}</option>)}</select>
-                    <input type="number" min="-10" max="10" value={customItemStatValue} onChange={event => setCustomItemStatValue(Number(event.target.value))} />
-                    <button type="button" onClick={addCustomItemBonus}><span className="editor-inline-icon icon-plus" />추가 / 변경</button>
-                  </div>
-                  <div className="item-bonus-chip-list">{previewBonuses.length ? previewBonuses.map(([key, value]) => <button type="button" key={key} onClick={() => removeCustomItemBonus(key)} title="클릭해서 삭제"><strong>{CORE_STAT_LABELS[key]}</strong><span>{value > 0 ? '+' : ''}{value}</span><em>×</em></button>) : <em>등록된 기본 능력 효과가 없습니다.</em>}</div>
-                </section>
-
-                <section className="item-editor-subsection item-editor-option-section">
-                  <div className="item-editor-subsection-title"><strong>옵션</strong></div>
-                  <div className="item-editor-checks pill-checks item-editor-checks-v2">
-                    <label><input type="checkbox" checked={customItemDraft.unique ?? false} onChange={event => setCustomItemDraft(current => ({ ...current, unique: event.target.checked }))} /> 고유 아이템 · 1개 제한</label>
-                    <label><input type="checkbox" checked={customItemDraft.shop !== false} onChange={event => setCustomItemDraft(current => ({ ...current, shop: event.target.checked }))} /> 상점 판매</label>
-                  </div>
-                </section>
-
-                <label className="item-editor-description-label">설명<textarea rows={5} value={customItemDraft.bonus} onChange={event => setCustomItemDraft(current => ({ ...current, bonus: event.target.value }))} /></label>
-              </fieldset>
-              {customItemError && <div className="form-error">{customItemError}</div>}
-              <div className="item-editor-actionbar">
-                <button onClick={() => openItemEditor()}><span className="editor-inline-icon icon-plus" />신규 생성</button>
-                <button type="button" onClick={resetItemEditorDraft} disabled={viewingBaseItem}><span className="editor-inline-icon icon-reset" />초기화</button>
-                {editingCustomItemId && <button className="danger" onClick={deleteCustomItem}><span className="editor-inline-icon icon-delete" />삭제</button>}
-                <button className="gold" disabled={viewingBaseItem} onClick={saveCustomItem}><span className="editor-inline-icon icon-save" />저장</button>
-              </div>
-            </div>
-          </section>
-        </main>
-        <div className="item-editor-footer"><button type="button" onClick={() => flash('아이템 에디터: 카테고리를 선택하고 기본 아이템을 참고해 새 아이템을 제작할 수 있습니다.')}><span>?</span>도움말</button><button type="button" onClick={() => setScreen('title')}><span>×</span>닫기</button></div>
-      </div>
-    );
+    return <div className="manager-screen">{notice && <div className="toast">{notice}</div>}<header className="setup-header"><div><span className="eyebrow">ITEM EDITOR</span><h1>아이템 에디터</h1></div><button onClick={() => setScreen('title')}>타이틀로</button></header><main className="item-editor-grid"><section className="panel item-editor-form"><div className="big-title"><h3>{editingCustomItemId ? '아이템 수정' : '새 아이템 추가'}</h3><span>기본 아이템은 보호되며 직접 만든 아이템만 수정·삭제합니다.</span></div><div className="custom-form-grid"><label>이름<input value={customItemDraft.name} onChange={event => setCustomItemDraft(current => ({ ...current, name: event.target.value }))} /></label><label>분류<select value={customItemDraft.type} onChange={event => setCustomItemDraft(current => ({ ...current, type: event.target.value as ItemType }))}>{SHOP_CATEGORIES.filter(category => category !== '전체').map(category => <option key={category}>{category}</option>)}</select></label><label>가격(동)<input type="number" min="0" value={customItemDraft.priceCopper} onChange={event => setCustomItemDraft(current => ({ ...current, priceCopper: Number(event.target.value) }))} /></label><label>효과 설명<input value={customItemDraft.bonus} onChange={event => setCustomItemDraft(current => ({ ...current, bonus: event.target.value }))} /></label><label>능력<select value={customItemStat} onChange={event => setCustomItemStat(event.target.value as CoreStatKey)}>{(Object.keys(CORE_STAT_LABELS) as CoreStatKey[]).map(key => <option key={key} value={key}>{CORE_STAT_LABELS[key]}</option>)}</select></label><label>증가치<input type="number" min="0" max="10" value={customItemStatValue} onChange={event => setCustomItemStatValue(Number(event.target.value))} /></label></div><div className="item-editor-checks"><label><input type="checkbox" checked={customItemDraft.unique ?? false} onChange={event => setCustomItemDraft(current => ({ ...current, unique: event.target.checked }))} /> 유니크 1개 제한</label><label><input type="checkbox" checked={customItemDraft.shop !== false} onChange={event => setCustomItemDraft(current => ({ ...current, shop: event.target.checked }))} /> 상점 판매</label></div>{customItemError && <div className="form-error">{customItemError}</div>}<div className="custom-editor-actions"><button onClick={() => openItemEditor()}>새 항목</button>{editingCustomItemId && <button className="danger" onClick={deleteCustomItem}>삭제</button>}<button className="gold" onClick={saveCustomItem}>저장</button></div></section><aside className="panel item-editor-list"><div className="equipment-inventory-head"><div><span className="eyebrow">CUSTOM ITEMS</span><h3>추가 아이템</h3></div><strong>{customItems.length}</strong></div>{customItems.length === 0 ? <div className="empty">추가한 아이템이 없습니다.</div> : customItems.map(item => <button key={item.id} className={editingCustomItemId === item.id ? 'selected' : ''} onClick={() => openItemEditor(item)}><strong>{item.name}</strong><span>{item.type} · {item.bonus || '효과 없음'}</span><small>{formatMoney(copperToMoney(item.priceCopper))} · {item.unique ? '유니크' : '복수 보유'}</small></button>)}</aside></main></div>;
   }
 
   if (screen === 'era') {
@@ -4023,8 +3764,7 @@ function App() {
             <section className="officer-preview-panel" data-officer-image-key={selectedNewHistoricOfficer?.portraitKey ?? selectedNewCustomOfficer?.id ?? ''}>
               <div className="officer-preview-image">
                 {selectedNewHistoricOfficer && <img src={officerFullbodyPath(selectedNewHistoricOfficer.id)} alt={`${selectedNewHistoricOfficer.name} 전신`} onError={event => { const portrait = officerPortraitPath(selectedNewHistoricOfficer.id); if (portrait && event.currentTarget.src !== new URL(portrait, window.location.href).href) event.currentTarget.src = portrait; else event.currentTarget.style.display = 'none'; }} />}
-                {selectedNewCustomOfficer?.portraitDataUrl && <img src={selectedNewCustomOfficer.portraitDataUrl} alt={`${selectedNewCustomOfficer.name} 초상`} />}
-                <div className="image-fallback-copy"><span>{previewOfficer ? previewOfficer.name.slice(0, 1) : '?'}</span><small>{selectedNewHistoricOfficer ? `${historicOfficerImageNumber(selectedNewHistoricOfficer.id)}번 장수 이미지` : selectedNewCustomOfficer?.portraitDataUrl ? '등록 초상' : '장수 이미지'}</small></div>
+                <div className="image-fallback-copy"><span>{previewOfficer ? previewOfficer.name.slice(0, 1) : '?'}</span><small>{selectedNewHistoricOfficer ? `${historicOfficerImageNumber(selectedNewHistoricOfficer.id)}번 장수 이미지` : '장수 이미지'}</small></div>
               </div>
               <div className="officer-preview-copy">
                 <span>{selectedEra.year}년 · {selectedEra.title}</span>
@@ -4101,7 +3841,7 @@ function App() {
                 })}
                 {customOfficers.map(officer => (
                   <button key={officer.id} className={`officer-list-row custom ${newGameOfficerId === officer.id ? 'selected' : ''}`} onClick={() => setNewGameOfficerId(officer.id)}>
-                    <span className="officer-list-initial">{officer.portraitDataUrl && <img src={officer.portraitDataUrl} alt="" />}<b>{officer.portraitDataUrl ? officer.name.slice(0, 1) : '新'}</b></span>
+                    <span className="officer-list-initial"><b>新</b></span>
                     <div className="officer-list-name"><strong>{officer.name}</strong><small>{officer.courtesyName ? `자 ${officer.courtesyName}` : '신무장'}</small></div>
                     <span className="officer-list-force">{officer.force}</span>
                     <span className="officer-list-age">{ageAtYear(officer.birthYear, selectedEra.year) ? `${ageAtYear(officer.birthYear, selectedEra.year)}세` : '-'}</span>
@@ -4242,62 +3982,47 @@ function App() {
 
   if (screen === 'custom-list') {
     const allChecked = customOfficers.length > 0 && checkedCustomIds.length === customOfficers.length;
-    const filteredCustomOfficers = customOfficers.filter(officer => !customOfficerSearch.trim() || [officer.name, officer.courtesyName, officer.force].join(' ').toLowerCase().includes(customOfficerSearch.trim().toLowerCase()));
     return (
-      <div className="manager-screen ornate-manager-screen">
+      <div className="manager-screen">
         {notice && <div className="toast">{notice}</div>}
         <header className="setup-header">
-          <div><span className="eyebrow">CUSTOM OFFICER EDITOR</span><h1>신무장 에디터</h1><p>새로운 영웅이, 또 하나의 삼국을 만든다.</p></div>
+          <div><span className="eyebrow">CUSTOM OFFICERS</span><h1>신무장 목록</h1></div>
           <button onClick={() => setScreen('title')}>타이틀로</button>
         </header>
-        <main className="custom-list-screen">
-          <section className="editor-ornate-card custom-list-overview">
-            <div className="editor-card-head"><strong>신무장 관리</strong><span>{customOfficers.length}명</span></div>
-            <div className="custom-overview-copy">
-              <h3>새로운 영웅을 만들고 기록하세요</h3>
-              <p>등록한 신무장은 새 게임의 장수 선택 단계에서 바로 선택할 수 있습니다. 이름, 능력, 전문능력, 특성, 성향, 관계를 자유롭게 설정해 보세요.</p>
+        <main className="manager-content">
+          <div className="manager-toolbar">
+            <div><strong>등록 신무장 {customOfficers.length}명</strong><span>이름을 클릭하면 수정 화면으로 이동합니다.</span></div>
+            <div><button className="gold" onClick={openNewCustomOfficer}>등록</button><button className="danger" onClick={deleteCheckedCustomOfficers}>삭제</button></div>
+          </div>
+          <div className="custom-table">
+            <div className="custom-table-head">
+              <input
+                aria-label="신무장 전체 선택"
+                type="checkbox"
+                checked={allChecked}
+                onChange={event => setCheckedCustomIds(event.target.checked ? customOfficers.map(officer => officer.id) : [])}
+              />
+              <span>이름</span><span>자</span><span>성별</span><span>소속</span><span>능력 평균</span><span>관리</span>
             </div>
-            <div className="custom-overview-actions">
-              <button className="gold" onClick={openNewCustomOfficer}><span className="editor-inline-icon icon-plus" />신규 생성</button>
-              <button className="danger" onClick={deleteCheckedCustomOfficers}><span className="editor-inline-icon icon-delete" />선택 삭제</button>
-            </div>
-          </section>
-          <section className="editor-ornate-card custom-list-table-wrap">
-            <div className="editor-card-head"><strong>등록 신무장 목록</strong><span>이름을 클릭하면 수정 화면으로 이동합니다.</span></div>
-            <div className="editor-search-row search-input-row">
-              <span className="editor-inline-icon icon-search" />
-              <input value={customOfficerSearch} onChange={event => setCustomOfficerSearch(event.target.value)} placeholder="이름 · 자 · 소속 검색" />
-            </div>
-            <div className="custom-table ornate-table">
-              <div className="custom-table-head">
-                <input
-                  aria-label="신무장 전체 선택"
-                  type="checkbox"
-                  checked={allChecked}
-                  onChange={event => setCheckedCustomIds(event.target.checked ? customOfficers.map(officer => officer.id) : [])}
-                />
-                <span>이름</span><span>자</span><span>성별</span><span>소속</span><span>능력 평균</span><span>관리</span>
-              </div>
-              {filteredCustomOfficers.length === 0 && <div className="custom-empty">등록된 신무장이 없습니다. <button onClick={openNewCustomOfficer}>첫 신무장 등록</button></div>}
-              {filteredCustomOfficers.map(officer => {
-                const avg = Math.round((officer.leadership + officer.martial + officer.intelligence + officer.militaryStrategy + officer.politics + officer.diplomacy + officer.personnel + officer.charisma) / 8);
-                return (
-                  <div className="custom-row" key={officer.id} onClick={() => openCustomOfficer(officer)}>
-                    <input
-                      aria-label={`${officer.name} 선택`}
-                      type="checkbox"
-                      checked={checkedCustomIds.includes(officer.id)}
-                      onClick={event => event.stopPropagation()}
-                      onChange={event => setCheckedCustomIds(current => event.target.checked ? [...current, officer.id] : current.filter(id => id !== officer.id))}
-                    />
-                    <strong>{officer.name}</strong><span>{officer.courtesyName || '-'}</span><span>{officer.gender}</span><span>{officer.force}</span><span>{avg}</span>
-                    <button onClick={event => { event.stopPropagation(); openCustomOfficer(officer); }}>수정</button>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="manager-bottom-actions"><button className="gold" onClick={openNewCustomOfficer}>신규 생성</button><button className="danger" onClick={deleteCheckedCustomOfficers}>선택 삭제</button></div>
-          </section>
+            {customOfficers.length === 0 && <div className="custom-empty">등록된 신무장이 없습니다. <button onClick={openNewCustomOfficer}>첫 신무장 등록</button></div>}
+            {customOfficers.map(officer => {
+              const avg = Math.round((officer.leadership + officer.martial + officer.intelligence + officer.militaryStrategy + officer.politics + officer.diplomacy + officer.personnel + officer.charisma) / 8);
+              return (
+                <div className="custom-row" key={officer.id} onClick={() => openCustomOfficer(officer)}>
+                  <input
+                    aria-label={`${officer.name} 선택`}
+                    type="checkbox"
+                    checked={checkedCustomIds.includes(officer.id)}
+                    onClick={event => event.stopPropagation()}
+                    onChange={event => setCheckedCustomIds(current => event.target.checked ? [...current, officer.id] : current.filter(id => id !== officer.id))}
+                  />
+                  <strong>{officer.name}</strong><span>{officer.courtesyName || '-'}</span><span>{officer.gender}</span><span>{officer.force}</span><span>{avg}</span>
+                  <button onClick={event => { event.stopPropagation(); openCustomOfficer(officer); }}>수정</button>
+                </div>
+              );
+            })}
+          </div>
+          <div className="manager-bottom-actions"><button className="gold" onClick={openNewCustomOfficer}>등록</button><button className="danger" onClick={deleteCheckedCustomOfficers}>선택 삭제</button></div>
         </main>
       </div>
     );
@@ -4309,126 +4034,65 @@ function App() {
     const pickerOptions = profilePicker === 'traits' ? TRAIT_OPTIONS : TENDENCY_OPTIONS;
     const pickerQuery = profilePickerQuery.trim().toLowerCase();
     const filteredPickerOptions = pickerOptions.filter(option => !pickerQuery || [option.name, option.category, option.description, option.effect].some(value => value.toLowerCase().includes(pickerQuery)));
-    const filteredCustomOfficers = customOfficers.filter(officer => !customOfficerSearch.trim() || [officer.name, officer.courtesyName, officer.force].join(' ').toLowerCase().includes(customOfficerSearch.trim().toLowerCase()));
-    const previewAge = Math.max(0, selectedEra.year - customDraft.birthYear + 1);
-    const homeCity = buildScenarioCities(selectedEra.year).find(city => city.id === customDraft.city)?.name ?? customDraft.city;
     return (
-      <div className="manager-screen ornate-manager-screen">
+      <div className="manager-screen">
         <header className="setup-header">
-          <div><span className="eyebrow">CUSTOM OFFICER EDITOR</span><h1>신무장 에디터</h1><p>새로운 영웅이, 또 하나의 삼국을 만든다.</p></div>
-          <button onClick={() => setScreen('title')}>타이틀로</button>
+          <div><span className="eyebrow">CUSTOM OFFICER EDITOR</span><h1>{editingCustomId ? '신무장 수정' : '신무장 등록'}</h1></div>
+          <button onClick={() => setScreen('custom-list')}>목록으로</button>
         </header>
-        <main className="custom-editor-screen">
-          <aside className="editor-ornate-card custom-editor-list-panel">
-            <div className="editor-card-head"><strong>신무장 목록</strong><span>{customOfficers.length}명</span></div>
-            <div className="editor-search-row search-input-row">
-              <span className="editor-inline-icon icon-search" />
-              <input value={customOfficerSearch} onChange={event => setCustomOfficerSearch(event.target.value)} placeholder="이름 또는 키워드로 검색..." />
+        <main className="custom-editor">
+          <div className="custom-editor-portrait"><strong>{customDraft.name || '新'}</strong><span>초상화 영역 · 추후 이미지 연결</span></div>
+          <div className="panel custom-form">
+            <div className="custom-form-grid">
+              <label>이름<input aria-label="신무장 이름" value={customDraft.name} onChange={event => { setCustomDraft(current => ({ ...current, name: event.target.value })); setCustomError(''); }} /></label>
+              <label>자<input aria-label="신무장 자" value={customDraft.courtesyName} onChange={event => setCustomDraft(current => ({ ...current, courtesyName: event.target.value }))} /></label>
+              <label>성별<select value={customDraft.gender} onChange={event => setCustomDraft(current => ({ ...current, gender: event.target.value as '남' | '여' }))}><option>남</option><option>여</option></select></label>
+              <label>생년<input type="number" min="120" max="260" value={customDraft.birthYear} onChange={event => setCustomDraft(current => ({ ...current, birthYear: Number(event.target.value) }))} /></label>
+              <label>소속<select value={customDraft.force} onChange={event => setCustomDraft(current => ({ ...current, force: event.target.value }))}><option>재야</option><option>유비군</option><option>조조군</option><option>원소군</option><option>손견군</option><option>동탁군</option></select></label>
+              <label>거점<select value={customDraft.city} onChange={event => setCustomDraft(current => ({ ...current, city: event.target.value }))}>{buildScenarioCities(selectedEra.year).map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select></label>
             </div>
-            <div className="custom-editor-list ornate-scroll">
-              {filteredCustomOfficers.length === 0 ? <div className="custom-empty compact-empty">등록된 신무장이 없습니다.</div> : filteredCustomOfficers.map(officer => (
-                <button key={officer.id} className={`custom-editor-list-row ${editingCustomId === officer.id ? 'selected' : ''}`} onClick={() => openCustomOfficer(officer)}>
-                  <span className="custom-editor-thumb">{officer.portraitDataUrl ? <img src={officer.portraitDataUrl} alt="" /> : officer.name.slice(0, 1)}</span>
-                  <div>
-                    <strong>{officer.name}</strong>
-                    <span>{officer.courtesyName || '새로운 장수'}</span>
-                    <small>{officer.force} · {selectedEra.year}년</small>
-                  </div>
-                </button>
+            <h3>8대 기본능력</h3>
+            <div className="custom-stat-grid">
+              {([
+                ['통솔', 'leadership'], ['무력', 'martial'], ['지략', 'intelligence'], ['군략', 'militaryStrategy'],
+                ['정치', 'politics'], ['외교', 'diplomacy'], ['인사', 'personnel'], ['매력', 'charisma'],
+              ] as const).map(([label, field]) => (
+                <label key={field}>{label}<input type="number" min="0" max="100" value={customDraft[field]} onChange={event => updateStat(field, Number(event.target.value))} /></label>
               ))}
             </div>
-            <div className="custom-editor-side-actions">
-              <button className="gold" onClick={openNewCustomOfficer}><span className="editor-inline-icon icon-plus" />신규 생성</button>
-              {editingCustomId && <button className="danger" onClick={() => deleteCustomOfficer(editingCustomId)}><span className="editor-inline-icon icon-delete" />삭제</button>}
+            <h3>전문능력 · E → S</h3>
+            <div className="custom-specialty-grid">
+              {SPECIALTY_KEYS.map(key => (
+                <label key={key}>{key}<select value={customDraft.specialties[key]} onChange={event => setCustomDraft(current => ({ ...current, specialties: { ...current.specialties, [key]: event.target.value as (typeof SPECIALTY_GRADES)[number] } }))}>{SPECIALTY_GRADES.map(grade => <option key={grade} value={grade}>{grade}</option>)}</select></label>
+              ))}
             </div>
-          </aside>
-
-          <section className="editor-ornate-card editor-portrait-shell">
-            <div className="editor-portrait-art">
-              <img src={customDraft.portraitDataUrl || '/resources/ui/editor/custom-officer-portrait.png'} alt="신무장 초상" />
-              <div className="editor-portrait-copy-vertical">뜻이 있는 곳에 새로운 역사가 시작된다.</div>
-              <div className="editor-portrait-nameplate">
-                <strong>{customDraft.name || '무명'}</strong>
-                <span>{customDraft.courtesyName || '자 미정'} · {customDraft.force}</span>
+            <h3>특성 · 성향 · 관계</h3>
+            <div className="custom-meta-grid">
+              <div className="meta-picker-card">
+                <div className="meta-picker-head"><strong>특성</strong><span>{customDraft.traits.length}/10</span></div>
+                <p>전투·내정·인재 행동에 직접 영향을 줍니다. 최대 10개까지 선택할 수 있습니다.</p>
+                <div className="selected-profile-chips">
+                  {customDraft.traits.length ? customDraft.traits.map(trait => <button type="button" key={trait} title={traitEffectLabel(trait)} onClick={() => toggleProfileSelection('traits', trait)}>{trait}<span>×</span></button>) : <em>선택된 특성 없음</em>}
+                </div>
+                <button type="button" onClick={() => openProfilePicker('traits')}>특성 선택</button>
               </div>
-            </div>
-            <div className="editor-portrait-quote">“난세 속에서 스스로의 길을 찾고자 하는 인물. 조용하지만 깊은 뜻을 품은, 새로운 시대의 인재이다.”</div>
-            <div className="editor-portrait-footer">
-              <label className="portrait-upload-button"><span className="editor-inline-icon icon-edit" />초상 변경<input type="file" accept="image/*" onChange={event => { handleCustomPortraitUpload(event.target.files?.[0]); event.currentTarget.value = ''; }} /></label>
-              {customDraft.portraitDataUrl && <button type="button" className="portrait-reset-button" onClick={() => setCustomDraft(current => ({ ...current, portraitDataUrl: '' }))}>기본 초상</button>}
-              <span>{previewAge}세 · {homeCity}</span>
-            </div>
-          </section>
-
-          <section className="editor-ornate-card editor-form-shell">
-            <div className="editor-tab-strip"><span className="active">기본 정보</span><span>능력 / 특성</span><span>관계</span><span>소개</span></div>
-            <div className="custom-form ornate-form-stack">
-              <section className="editor-form-section">
-                <div className="editor-section-title"><strong>기본 정보</strong></div>
-                <div className="custom-form-grid custom-editor-info-grid">
-                  <label>이름<input aria-label="신무장 이름" value={customDraft.name} onChange={event => { setCustomDraft(current => ({ ...current, name: event.target.value })); setCustomError(''); }} /></label>
-                  <label>자<input aria-label="신무장 자" value={customDraft.courtesyName} onChange={event => setCustomDraft(current => ({ ...current, courtesyName: event.target.value }))} /></label>
-                  <label>성별<select value={customDraft.gender} onChange={event => setCustomDraft(current => ({ ...current, gender: event.target.value as '남' | '여' }))}><option>남</option><option>여</option></select></label>
-                  <label>생년<input type="number" min="120" max="260" value={customDraft.birthYear} onChange={event => setCustomDraft(current => ({ ...current, birthYear: Number(event.target.value) }))} /></label>
-                  <label>소속<select value={customDraft.force} onChange={event => setCustomDraft(current => ({ ...current, force: event.target.value }))}><option>재야</option><option>유비군</option><option>조조군</option><option>원소군</option><option>손견군</option><option>동탁군</option></select></label>
-                  <label>거점<select value={customDraft.city} onChange={event => setCustomDraft(current => ({ ...current, city: event.target.value }))}>{buildScenarioCities(selectedEra.year).map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select></label>
+              <div className="meta-picker-card">
+                <div className="meta-picker-head"><strong>성향</strong><span>{customDraft.tendencies.length}/5</span></div>
+                <p>장수의 판단 방식에 따라 공격·방어·내정·탐색·등용 보정이 달라집니다. 최대 5개까지 선택합니다.</p>
+                <div className="selected-profile-chips">
+                  {customDraft.tendencies.length ? customDraft.tendencies.map(tendency => <button type="button" key={tendency} title={tendencyEffectLabel(tendency)} onClick={() => toggleProfileSelection('tendencies', tendency)}>{tendency}<span>×</span></button>) : <em>선택된 성향 없음</em>}
                 </div>
-              </section>
-
-              <section className="editor-form-section">
-                <div className="editor-section-title inline-title"><strong>기본 능력</strong><span>8대 능력치를 조정하세요.</span></div>
-                <div className="custom-stat-grid ornate-stat-grid">
-                  {([
-                    ['통솔', 'leadership', 'helmet'], ['무력', 'martial', 'sword'], ['지략', 'intelligence', 'fan'], ['군략', 'militaryStrategy', 'scroll'],
-                    ['정치', 'politics', 'temple'], ['외교', 'diplomacy', 'handshake'], ['인사', 'personnel', 'people'], ['매력', 'charisma', 'flower'],
-                  ] as const).map(([label, field, icon]) => (
-                    <label key={field} className="stat-card">
-                      <span className={`editor-icon icon-${icon}`} />
-                      <em>{label}</em>
-                      <input type="number" min="0" max="100" value={customDraft[field]} onChange={event => updateStat(field, Number(event.target.value))} />
-                    </label>
-                  ))}
-                </div>
-              </section>
-
-              <section className="editor-form-section two-column-meta">
-                <div>
-                  <div className="editor-section-title"><strong>전문능력</strong></div>
-                  <div className="custom-specialty-grid ornate-specialty-grid">
-                    {SPECIALTY_KEYS.map(key => (
-                      <label key={key}>{key}<select value={customDraft.specialties[key]} onChange={event => setCustomDraft(current => ({ ...current, specialties: { ...current.specialties, [key]: event.target.value as (typeof SPECIALTY_GRADES)[number] } }))}>{SPECIALTY_GRADES.map(grade => <option key={grade} value={grade}>{grade}</option>)}</select></label>
-                    ))}
-                  </div>
-                </div>
-                <div className="custom-meta-grid">
-                  <div className="meta-picker-card">
-                    <div className="meta-picker-head"><strong>특성</strong><span>{customDraft.traits.length}/10</span></div>
-                    <p>전투·내정·인재 행동에 직접 영향을 줍니다.</p>
-                    <div className="selected-profile-chips">
-                      {customDraft.traits.length ? customDraft.traits.map(trait => <button type="button" key={trait} title={traitEffectLabel(trait)} onClick={() => toggleProfileSelection('traits', trait)}>{trait}<span>×</span></button>) : <em>선택된 특성 없음</em>}
-                    </div>
-                    <button type="button" onClick={() => openProfilePicker('traits')}>특성 선택</button>
-                  </div>
-                  <div className="meta-picker-card">
-                    <div className="meta-picker-head"><strong>성향</strong><span>{customDraft.tendencies.length}/5</span></div>
-                    <p>장수의 판단 방식에 따라 전투와 내정 성향이 달라집니다.</p>
-                    <div className="selected-profile-chips">
-                      {customDraft.tendencies.length ? customDraft.tendencies.map(tendency => <button type="button" key={tendency} title={tendencyEffectLabel(tendency)} onClick={() => toggleProfileSelection('tendencies', tendency)}>{tendency}<span>×</span></button>) : <em>선택된 성향 없음</em>}
-                    </div>
-                    <button type="button" onClick={() => openProfilePicker('tendencies')}>성향 선택</button>
-                  </div>
-                  <label className="relation-input-card">관계<input value={customDraft.relations.join(', ')} onChange={event => setCustomDraft(current => ({ ...current, relations: event.target.value.split(',').map(value => value.trim()).filter(Boolean) }))} placeholder="예: 관우, 장비" /></label>
-                </div>
-              </section>
-              {customError && <div className="form-error">{customError}</div>}
-              <div className="custom-editor-actions editor-bottom-actions">
-                <button onClick={() => setScreen('custom-list')}><span className="editor-inline-icon icon-back" />목록으로</button>
-                <button onClick={() => setCustomDraft(emptyCustomOfficer())}><span className="editor-inline-icon icon-reset" />초기화</button>
-                {editingCustomId && <button className="danger" onClick={() => deleteCustomOfficer(editingCustomId)}><span className="editor-inline-icon icon-delete" />삭제</button>}
-                <button className="gold" onClick={saveCustomOfficer}><span className="editor-inline-icon icon-save" />{editingCustomId ? '수정 저장' : '등록'}</button>
+                <button type="button" onClick={() => openProfilePicker('tendencies')}>성향 선택</button>
               </div>
+              <label>관계<input value={customDraft.relations.join(', ')} onChange={event => setCustomDraft(current => ({ ...current, relations: event.target.value.split(',').map(value => value.trim()).filter(Boolean) }))} placeholder="예: 관우, 장비" /></label>
             </div>
-          </section>
+            {customError && <div className="form-error">{customError}</div>}
+            <div className="custom-editor-actions">
+              <button onClick={() => setScreen('custom-list')}>취소</button>
+              {editingCustomId && <button className="danger" onClick={() => deleteCustomOfficer(editingCustomId)}>삭제</button>}
+              <button className="gold" onClick={saveCustomOfficer}>{editingCustomId ? '수정 저장' : '등록'}</button>
+            </div>
+          </div>
         </main>
         {profilePicker && (
           <div className="profile-picker-backdrop" onMouseDown={() => setProfilePicker(null)}>
@@ -4882,12 +4546,12 @@ function App() {
                     <div className="store-catalog-heading"><div><span className="eyebrow">CATALOG</span><h3>{shopSection}</h3></div><strong>{shopItems.length}</strong></div>
                     {shopFilters.length > 1 && <div className="store-filter-row">{shopFilters.map(filter => <button key={filter} className={shopItemFilter === filter ? 'active' : ''} onClick={() => { setShopItemFilter(filter); setSelectedShopItemId(''); }}>{filter}</button>)}</div>}
                     <div className="store-catalog-list">
-                      {shopItems.length === 0 ? <div className="empty">판매 중인 물품이 없습니다.</div> : shopItems.map(item => { const count = itemCount(game, item.id); const offer = cityShopOffer(game, tradeCity, item); const affordable = moneyToCopper(game.personalTreasury) >= offer.priceCopper; return <button key={item.id} className={`${selectedShopItem?.id === item.id ? 'selected' : ''} ${offer.stock <= 0 ? 'sold-out' : ''}`} onClick={() => setSelectedShopItemId(item.id)}><img className="store-catalog-thumb" src={itemImagePath(item)} alt="" /><div><strong>{item.name}</strong><span>{item.type} · {item.bonus || '효과 없음'}</span></div><div className="store-catalog-price"><strong>{formatMoney(copperToMoney(offer.priceCopper))}</strong><small className={offer.stock <= 0 ? 'insufficient' : affordable ? '' : 'insufficient'}>{offer.stock <= 0 ? '품절' : `재고 ${offer.stock}`} · 보유 {count}</small></div></button>; })}
+                      {shopItems.length === 0 ? <div className="empty">판매 중인 물품이 없습니다.</div> : shopItems.map(item => { const count = itemCount(game, item.id); const offer = cityShopOffer(game, tradeCity, item); const affordable = moneyToCopper(game.personalTreasury) >= offer.priceCopper; return <button key={item.id} className={`${selectedShopItem?.id === item.id ? 'selected' : ''} ${offer.stock <= 0 ? 'sold-out' : ''}`} onClick={() => setSelectedShopItemId(item.id)}><div><strong>{item.name}</strong><span>{item.type} · {item.bonus || '효과 없음'}</span></div><div className="store-catalog-price"><strong>{formatMoney(copperToMoney(offer.priceCopper))}</strong><small className={offer.stock <= 0 ? 'insufficient' : affordable ? '' : 'insufficient'}>{offer.stock <= 0 ? '품절' : `재고 ${offer.stock}`} · 보유 {count}</small></div></button>; })}
                     </div>
                   </aside>
                   <div className="panel store-item-detail">
                     {selectedShopItem ? (() => { const offer = selectedShopOffer ?? cityShopOffer(game, tradeCity, selectedShopItem); const blocked = Boolean((selectedShopItem.unique && selectedShopItemCount > 0) || offer.stock <= 0 || !tradeCity); const affordable = moneyToCopper(game.personalTreasury) >= offer.priceCopper; const statEntries = Object.entries(selectedShopItem.bonuses).filter(([, value]) => Number(value) !== 0) as Array<[CoreStatKey, number]>; return <>
-                      <div className="store-item-detail-head"><img className="store-detail-item-image" src={itemImagePath(selectedShopItem)} alt="" /><div><span className="tag">{selectedShopItem.type}</span><h3>{selectedShopItem.name}</h3><p>{selectedShopItem.bonus || '별도의 능력치 효과가 없습니다.'}</p></div><span className={`store-stock-badge ${selectedShopItem.unique ? 'unique' : ''}`}>재고 {offer.stock} · {selectedShopItem.unique ? '유니크' : offer.marketLabel}</span></div>
+                      <div className="store-item-detail-head"><div><span className="tag">{selectedShopItem.type}</span><h3>{selectedShopItem.name}</h3><p>{selectedShopItem.bonus || '별도의 능력치 효과가 없습니다.'}</p></div><span className={`store-stock-badge ${selectedShopItem.unique ? 'unique' : ''}`}>재고 {offer.stock} · {selectedShopItem.unique ? '유니크' : offer.marketLabel}</span></div>
                       <div className="store-detail-grid">
                         <div><span>현재 도시 가격</span><strong>{formatMoney(copperToMoney(offer.priceCopper))}</strong><small>{tradeCity?.name ?? '도시 없음'} · {offer.marketLabel}</small></div>
                         <div><span>시장 재고</span><strong>{offer.stock}개</strong><small>월초 재입고 · 기준 {offer.baseStock}</small></div><div><span>현재 보유</span><strong>{selectedShopItemCount}개</strong></div>
@@ -4918,7 +4582,7 @@ function App() {
                     <div className="equipment-detail-actions">{(EQUIPPABLE_TYPES.includes(selectedInventoryItem.type) || selectedInventoryItem.type === '책') && <label>{selectedInventoryItem.type === '책' ? '연구 장수' : '장착 대상'}<select value={officerSelectedGeneral.id} onChange={event => setSelectedGeneralId(event.target.value)}>{playerGenerals.map(general => <option key={general.id} value={general.id}>{general.name} · {personnelLabel(general)}</option>)}</select></label>}<div>{EQUIPPABLE_TYPES.includes(selectedInventoryItem.type) && <button className="gold" onClick={() => equipItem(selectedInventoryItem.id, officerSelectedGeneral.id)}>{selectedInventoryWearer?.id === officerSelectedGeneral.id ? '현재 장착 중' : '선택 무장에게 장착'}</button>}{EQUIPPABLE_TYPES.includes(selectedInventoryItem.type) && <button disabled={!selectedInventoryWearer} onClick={() => selectedInventoryWearer && unequipItem(selectedInventoryItem.id, selectedInventoryWearer.id)}>장착 해제</button>}{selectedInventoryItem.type === '소모품' && <button className="gold" disabled={consumableUsedToday || itemCount(game, selectedInventoryItem.id) <= 0} onClick={() => useConsumable(selectedInventoryItem.id)}>{consumableUsedToday ? '오늘 사용 완료' : '소모품 사용'}</button>}{selectedInventoryItem.type === '책' && <button className="gold" disabled={game.actionPoints < 5} onClick={() => studyBook(selectedInventoryItem.id, officerSelectedGeneral.id)}>연구 · AP 5 · 2일</button>}<button onClick={() => { setEquipmentGiftOpen(true); setEquipmentGiftTargetId(''); }}>선물하기</button></div></div>
                   </> : <div className="empty">현재 보유한 장비가 없습니다.</div>}
                 </div>
-                <aside className="panel equipment-inventory-panel"><div className="equipment-inventory-head"><div><span className="eyebrow">MY ITEMS</span><h3>보유 아이템</h3></div><strong>{ownedEquipment.length}</strong></div><div className="equipment-inventory-list">{ownedEquipment.length === 0 ? <div className="empty">보유 아이템 없음</div> : ownedEquipment.map(item => { const wearers = game.generals.filter(general => Object.values(general.equipment).includes(item.id)); return <button type="button" key={item.id} className={selectedInventoryItem?.id === item.id ? 'selected' : ''} onClick={() => { setSelectedInventoryItemId(item.id); setEquipmentGiftOpen(false); }}><span className="equipment-list-type item-image-type"><img src={itemImagePath(item)} alt="" /></span><div><strong>{item.name} ×{itemCount(game, item.id)}</strong><small>{item.bonus}</small><em>{wearers.length ? `착용 ${wearers.map(general => general.name).join(', ')}` : item.unique ? '유니크' : '보유 중'}</em></div></button>; })}</div></aside>
+                <aside className="panel equipment-inventory-panel"><div className="equipment-inventory-head"><div><span className="eyebrow">MY ITEMS</span><h3>보유 아이템</h3></div><strong>{ownedEquipment.length}</strong></div><div className="equipment-inventory-list">{ownedEquipment.length === 0 ? <div className="empty">보유 아이템 없음</div> : ownedEquipment.map(item => { const wearers = game.generals.filter(general => Object.values(general.equipment).includes(item.id)); return <button type="button" key={item.id} className={selectedInventoryItem?.id === item.id ? 'selected' : ''} onClick={() => { setSelectedInventoryItemId(item.id); setEquipmentGiftOpen(false); }}><span className="equipment-list-type">{item.type.slice(0, 1)}</span><div><strong>{item.name} ×{itemCount(game, item.id)}</strong><small>{item.bonus}</small><em>{wearers.length ? `착용 ${wearers.map(general => general.name).join(', ')}` : item.unique ? '유니크' : '보유 중'}</em></div></button>; })}</div></aside>
               </div>
             </section>
           )}

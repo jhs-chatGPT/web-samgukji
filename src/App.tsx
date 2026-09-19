@@ -462,7 +462,7 @@ const TABS: Tab[] = [
   '에디터',
   '시스템',
 ];
-const SIDEBAR_TABS: Tab[] = ['도시', '군사', '장수', '임무', '생애', '가족', '무장', '인사', '내정', '인재', '상점', '장비', '천하', '에디터', '시스템'];
+const SIDEBAR_TABS: Tab[] = ['도시', '군사', '장수', '임무', '생애', '가족', '무장', '인사', '내정', '인재', '상점', '장비', '에디터', '시스템'];
 const MINOR_SUCCESSOR_TABS: Tab[] = ['천하', '장수', '생애', '가족', '시스템'];
 const TAB_ICONS: Record<Tab, typeof MapIcon> = {
   천하: MapIcon,
@@ -1462,7 +1462,7 @@ function App() {
   const [officerDetailModal, setOfficerDetailModal] = useState<{ kind: 'trait' | 'tendency'; option: typeof TRAIT_OPTIONS[number] } | null>(null);
   const [cityListQuery, setCityListQuery] = useState('');
   const [cityRegionFilter, setCityRegionFilter] = useState('전체 지역');
-  const [cityModalCityId, setCityModalCityId] = useState('');
+  const [cityPreviewCityId, setCityPreviewCityId] = useState('');
   const [customOfficers, setCustomOfficers] = useState<CustomOfficer[]>(() => {
     const raw = localStorage.getItem(CUSTOM_OFFICER_KEY);
     if (!raw) return [];
@@ -3877,17 +3877,12 @@ function App() {
       if (!cityQuery) return true;
       return [city.name, city.region, city.owner].some(value => value.toLowerCase().includes(cityQuery));
     });
-    const highlightedCityId = cityModalCityId || activeStartCityId || fixedStartCityId || scenarioCities[0]?.id || '';
+    const highlightedCityId = cityPreviewCityId || activeStartCityId || fixedStartCityId || scenarioCities[0]?.id || '';
     const listPreviewCity = scenarioCities.find(city => city.id === highlightedCityId) ?? scenarioCities[0] ?? null;
-    const modalCity = scenarioCities.find(city => city.id === cityModalCityId) ?? null;
     const formatCityOwner = (city: typeof scenarioCities[number]) => city.owner === '재야' ? '없음' : city.owner.endsWith('군') ? city.owner.slice(0, -1) : city.owner;
     const focusCity = (cityId: string) => {
-      setCityModalCityId(cityId);
+      setCityPreviewCityId(cityId);
       if (canChooseStartCity) setSelectedStartCityId(cityId);
-    };
-    const confirmModalCity = () => {
-      if (modalCity && canChooseStartCity) setSelectedStartCityId(modalCity.id);
-      setCityModalCityId('');
     };
     return (
       <div className="setup-screen" data-map-resource={FUTURE_WORLD_MAP_RESOURCE_PATH}>
@@ -3974,7 +3969,6 @@ function App() {
                   return <button type="button" className={`map-city-marker city-${cityScaleFromTier(city.tier)} label-${WORLD_MAP_LABEL_SIDES[city.id] ?? 'below'} ${canChooseStartCity ? 'selectable' : 'fixed'} ${selected ? 'selected' : ''}`} style={{ left: `${position.x}%`, top: `${position.y}%` }} key={city.id} onClick={() => focusCity(city.id)} aria-pressed={selected} aria-disabled={!canChooseStartCity} title={`${city.name} · ${cityScaleLabel(city.tier)} · ${city.owner}`}><img className="city-map-icon" src={cityIconPath(city)} alt="" /><i className="city-anchor" style={{ backgroundColor: markerColor }} /><span className="city-name">{city.name}</span></button>;
                 })}
               </div>
-              {modalCity && <div className="city-map-selection-modal-backdrop" onMouseDown={() => setCityModalCityId('')}><div className="city-map-selection-modal" onMouseDown={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-label={`${modalCity.name} 도시 정보`}><button type="button" className="city-map-selection-modal-close" onClick={() => setCityModalCityId('')} aria-label="도시 정보 닫기">×</button><div className="city-map-selection-modal-head"><h2>{modalCity.name}</h2></div><div className="city-map-selection-modal-art"><img src={cityArtworkPath(modalCity)} alt={`${modalCity.name} 전경`} onError={event => { event.currentTarget.src = cityDetailPath(modalCity); }} /></div><div className="city-map-selection-modal-stats"><div><span>지역</span><strong>{modalCity.region}</strong></div><div><span>군주</span><strong>{formatCityOwner(modalCity)}</strong></div><div><span>인구</span><strong>{modalCity.population.toLocaleString()}</strong></div><div><span>치안</span><strong>{modalCity.security}</strong></div><div><span>상업</span><strong>{modalCity.commerce}</strong></div><div><span>농업</span><strong>{modalCity.agriculture}</strong></div><div><span>방어도</span><strong>{modalCity.defense.toLocaleString()}</strong></div></div>{(() => { const identity = cityIdentity(modalCity); return <div className="city-map-selection-modal-trait"><strong>특징</strong><div><b>{identity.trait}</b><p>{identity.description}</p></div></div>; })()}<div className="city-map-selection-modal-actions"><button className="gold" onClick={confirmModalCity}>{canChooseStartCity ? '이 도시 선택' : '확인'}</button></div></div></div>}
             </div>
           </section>
           <div className="setup-actions">

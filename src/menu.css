@@ -3915,3 +3915,161 @@
   .custom-editor-list-panel,.editor-portrait-shell,.editor-form-shell{min-height:620px !important;}
   .custom-editor-info-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
 }
+
+/* ========================================================================== */
+/* v69-34 EDITOR FINISH PASS — high-resolution skin, aligned titles/buttons   */
+/* ========================================================================== */
+:root{
+  --editor2-panel:url('/resources/ui/editor-v3/frame-panel.png');
+  --editor2-modal:url('/resources/ui/editor-v3/frame-modal.png');
+  --editor2-portrait:url('/resources/ui/editor-v3/frame-portrait.png');
+  --editor2-title:url('/resources/ui/editor-v3/frame-title.png');
+  --editor2-title-active:url('/resources/ui/editor-v3/frame-title-active.png');
+  --editor2-button:url('/resources/ui/editor-v3/button.png');
+  --editor2-button-active:url('/resources/ui/editor-v3/button-active.png');
+  --editor2-button-danger:url('/resources/ui/editor-v3/button-danger.png');
+  --editor2-row:url('/resources/ui/editor-v3/row.png');
+  --editor2-row-selected:url('/resources/ui/editor-v3/row-selected.png');
+  --editor2-input:url('/resources/ui/editor-v3/input.png');
+  --editor2-checkbox-off:url('/resources/ui/editor-v3/checkbox-off.png');
+  --editor2-checkbox-on:url('/resources/ui/editor-v3/checkbox-on.png');
+}
+
+.ornate-manager-screen .editor-ornate-card{
+  border-width:24px !important;
+  border-image:var(--editor2-panel) 145 fill / 24px / 0 stretch !important;
+  padding:10px 12px 12px !important;
+}
+.ornate-manager-screen .editor-card-head,
+.ornate-manager-screen .editor-section-title,
+.ornate-manager-screen .item-editor-subsection-title{
+  min-height:44px !important;
+  height:44px !important;
+  margin:0 0 8px !important;
+  padding:7px 22px 8px !important;
+  display:flex !important;
+  align-items:center !important;
+  background:var(--editor2-title) center/100% 100% no-repeat !important;
+}
+.ornate-manager-screen .editor-card-head strong,
+.ornate-manager-screen .editor-section-title strong,
+.ornate-manager-screen .item-editor-subsection-title strong{
+  display:flex !important;
+  align-items:center !important;
+  min-height:28px !important;
+  margin:0 !important;
+  font-size:16px !important;
+  line-height:1.15 !important;
+}
+.ornate-manager-screen .editor-card-head span,
+.ornate-manager-screen .editor-section-title span{
+  display:flex !important;
+  align-items:center !important;
+  min-height:28px !important;
+  line-height:1 !important;
+}
+
+/* Keep the editor header frame crisp and the title/button vertically aligned. */
+.ornate-manager-screen .setup-header{
+  background:#06111b var(--editor2-title) center/100% 100% no-repeat !important;
+  padding:13px 32px !important;
+}
+.ornate-manager-screen .setup-header>button{
+  align-self:center !important;
+  margin:0 !important;
+}
+
+/* Item image frame uses the new 1536x2304 portrait frame at a proper nine-slice. */
+.item-preview-art-frame-v2{
+  border-width:20px !important;
+  border-image:var(--editor2-portrait) 115 fill / 20px / 0 stretch !important;
+  padding:8px !important;
+}
+.item-image-editor-preview{
+  border-image:var(--editor2-portrait) 115 fill / 10px / 0 stretch !important;
+}
+.item-preview-art-frame-v2 img,
+.item-image-editor-preview img,
+.item-editor-list-v2 .item-editor-thumb img{
+  image-rendering:auto !important;
+  filter:saturate(1.04) contrast(1.03) !important;
+}
+
+/* Bottom actions now use the full available width: 3 buttons = thirds, 4 = quarters. */
+.item-editor-actionbar{
+  grid-template-columns:repeat(auto-fit,minmax(104px,1fr)) !important;
+  gap:7px !important;
+  padding:9px 0 0 !important;
+  align-items:stretch !important;
+}
+.item-editor-actionbar button{
+  width:100% !important;
+  min-width:0 !important;
+  min-height:52px !important;
+  margin:0 !important;
+}
+
+/* Custom gold checkboxes replace the browser's white/blue native controls. */
+.ornate-manager-screen .item-editor-checks-v2 label{
+  min-height:50px !important;
+  padding:8px 12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:10px !important;
+  font-size:11px !important;
+  line-height:1.3 !important;
+}
+.ornate-manager-screen .item-editor-checks-v2 input[type='checkbox']{
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  flex:0 0 28px !important;
+  width:28px !important;
+  height:28px !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:var(--editor2-checkbox-off) center/100% 100% no-repeat !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
+}
+.ornate-manager-screen .item-editor-checks-v2 input[type='checkbox']:checked{
+  background-image:var(--editor2-checkbox-on) !important;
+}
+.ornate-manager-screen .item-editor-checks-v2 input[type='checkbox']:focus-visible{
+  outline:1px solid #e8c66f !important;
+  outline-offset:2px !important;
+}
+
+/* Slightly larger, cleaner item thumbnails now that the catalog uses 1024px art. */
+.item-editor-list-v2>button{
+  grid-template-columns:54px minmax(0,1fr) !important;
+  min-height:70px !important;
+  padding:7px 11px !important;
+}
+.item-editor-list-v2 .item-editor-thumb{
+  width:54px !important;
+  height:54px !important;
+  border:1px solid rgba(226,187,96,.7) !important;
+  background:#04090e !important;
+}
+.item-editor-list-v2 .item-editor-list-copy strong{font-size:14px !important;}
+
+/* The form subsection headers line up with the main card headers. */
+.item-bonus-editor-head{
+  min-height:44px !important;
+  height:44px !important;
+  padding:7px 22px !important;
+  display:flex !important;
+  align-items:center !important;
+}
+
+/* Better visual balance at the user's 16:9 desktop layout. */
+@media (min-width:1400px){
+  .item-editor-screen-v2{
+    grid-template-columns:minmax(310px,23%) minmax(570px,45%) minmax(410px,32%) !important;
+  }
+  .item-preview-panel-v2 .item-preview-hero{
+    grid-template-columns:minmax(260px,43%) minmax(0,1fr) !important;
+  }
+}

@@ -3797,7 +3797,7 @@ function App() {
           <h1>삼국지</h1>
           <p>천하의 흐름 속에서 한 명의 장수로 살아가는 전략 시뮬레이션</p>
         </div>
-        <div className="title-menu">
+        <div className="title-menu" aria-label="타이틀 메뉴">
           <button className="title-menu-primary" onClick={() => setScreen('era')}>새 게임</button>
           <button disabled={!hasSave} onClick={() => setScreen('game')}>
             이어서하기 {!hasSave && <small>저장 데이터 없음</small>}
@@ -3806,7 +3806,7 @@ function App() {
           <button onClick={() => openItemEditor()}>아이템 에디터</button>
           <button onClick={() => setScreen('settings')}>설정</button>
         </div>
-        <div className="title-version">Prototype 0.2</div>
+        <div className="title-version">Ver. 0.69.36</div>
       </div>
     );
   }

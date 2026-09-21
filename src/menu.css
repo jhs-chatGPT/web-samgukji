@@ -4317,3 +4317,135 @@
   .item-preview-panel-v2 .item-preview-hero{grid-template-columns:1fr !important;}
   .item-preview-art-frame-v2{max-width:none !important;}
 }
+
+/* ===== v69-36 PRODUCT DESIGN TITLE SCREEN =====
+   Final background + four reusable button-state assets supplied by the user.
+   Do not redraw the background/title art in CSS. */
+.title-screen{
+  position:relative !important;
+  display:block !important;
+  width:100vw !important;
+  height:100dvh !important;
+  min-height:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  background:#0b0b0c url('/resources/title/title-start-bg-v69-36.png') center center / cover no-repeat !important;
+}
+.title-screen::before,
+.title-screen::after{
+  display:none !important;
+  content:none !important;
+}
+/* The final background already contains the 삼국지 / 천하의 운명 / 天下之命 title artwork. */
+.title-screen .title-crest,
+.title-screen .title-copy{
+  display:none !important;
+}
+.title-screen .title-menu{
+  position:absolute !important;
+  z-index:3 !important;
+  left:50% !important;
+  top:36.2% !important;
+  transform:translateX(-50%) !important;
+  width:clamp(420px,31vw,560px) !important;
+  max-width:none !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:clamp(6px,.85vh,10px) !important;
+  margin:0 !important;
+  padding:0 !important;
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+}
+.title-screen .title-menu button,
+.title-screen .title-menu .title-menu-primary{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  position:relative !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  height:clamp(62px,7.25vh,78px) !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 52px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:visible !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background-color:transparent !important;
+  background-image:url('/resources/title/title-button-normal.png') !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  background-size:100% 100% !important;
+  box-shadow:none !important;
+  color:#e7d4a6 !important;
+  font-family:'Noto Serif KR','Nanum Myeongjo','Batang','Malgun Gothic',serif !important;
+  font-size:clamp(18px,1.35vw,25px) !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+  letter-spacing:.075em !important;
+  text-align:center !important;
+  text-shadow:0 2px 3px #000,0 0 10px rgba(0,0,0,.92) !important;
+  filter:none !important;
+  transform:none !important;
+  transition:filter .10s ease, color .10s ease !important;
+  cursor:pointer !important;
+}
+.title-screen .title-menu button:hover:not(:disabled),
+.title-screen .title-menu button:focus-visible:not(:disabled){
+  padding:0 52px !important;
+  background-image:url('/resources/title/title-button-hover.png') !important;
+  color:#ffe6a2 !important;
+  filter:none !important;
+  transform:none !important;
+  outline:none !important;
+}
+.title-screen .title-menu button:active:not(:disabled){
+  padding:2px 52px 0 !important;
+  background-image:url('/resources/title/title-button-pressed.png') !important;
+  color:#d9c28d !important;
+  filter:none !important;
+  transform:none !important;
+}
+.title-screen .title-menu button:disabled{
+  background-image:url('/resources/title/title-button-disabled.png') !important;
+  color:#8f846d !important;
+  opacity:.82 !important;
+  filter:none !important;
+  cursor:not-allowed !important;
+}
+.title-screen .title-menu button small{
+  display:none !important;
+}
+.title-screen .title-version{
+  position:absolute !important;
+  z-index:3 !important;
+  left:2.1vw !important;
+  bottom:2.1vh !important;
+  color:rgba(214,190,139,.72) !important;
+  font-family:Georgia,'Times New Roman',serif !important;
+  font-size:clamp(10px,.72vw,13px) !important;
+  letter-spacing:.04em !important;
+  text-shadow:0 1px 4px #000 !important;
+}
+@media(max-width:900px){
+  .title-screen .title-menu{
+    top:37% !important;
+    width:min(78vw,520px) !important;
+    gap:6px !important;
+  }
+  .title-screen .title-menu button,
+  .title-screen .title-menu .title-menu-primary{
+    height:clamp(54px,7vh,68px) !important;
+    font-size:clamp(16px,3vw,21px) !important;
+  }
+}
+@media(max-height:700px){
+  .title-screen .title-menu{top:35% !important;gap:4px !important;}
+  .title-screen .title-menu button,
+  .title-screen .title-menu .title-menu-primary{height:56px !important;}
+}

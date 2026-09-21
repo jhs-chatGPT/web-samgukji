@@ -4073,3 +4073,247 @@
     grid-template-columns:minmax(260px,43%) minmax(0,1fr) !important;
   }
 }
+
+/* ========================================================================== */
+/* v69-35 EDITOR LAYOUT FIX — saved rows, profile picker, hover and item art   */
+/* Targeted pass only: no game-data or editor-function changes.                */
+/* ========================================================================== */
+
+/* 1) Saved custom-officer table: rows must stay directly below the header. */
+.custom-list-table-wrap .ornate-table{
+  display:grid !important;
+  grid-template-rows:auto !important;
+  grid-auto-rows:minmax(54px,auto) !important;
+  align-content:start !important;
+  overflow:auto !important;
+  background:#06111b !important;
+}
+.custom-list-table-wrap .custom-table-head{
+  position:sticky !important;
+  top:0 !important;
+  z-index:3 !important;
+  min-height:48px !important;
+  padding:7px 12px !important;
+  background:#0b1823 !important;
+}
+.custom-list-table-wrap .custom-row{
+  min-height:58px !important;
+  padding:7px 12px !important;
+  background:var(--editor2-row) center/100% 100% no-repeat !important;
+  border:0 !important;
+}
+.custom-list-table-wrap .custom-row:hover{
+  background-image:var(--editor2-row-selected) !important;
+}
+.custom-list-table-wrap .custom-empty{
+  min-height:150px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+/* Custom gold checkboxes for the manager table as well. */
+.custom-list-table-wrap input[type='checkbox']{
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  width:24px !important;
+  height:24px !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:var(--editor2-checkbox-off) center/100% 100% no-repeat !important;
+  box-shadow:none !important;
+  cursor:pointer !important;
+}
+.custom-list-table-wrap input[type='checkbox']:checked{
+  background-image:var(--editor2-checkbox-on) !important;
+}
+.custom-list-table-wrap input[type='checkbox']:focus-visible{
+  outline:1px solid #e7c46b !important;
+  outline-offset:2px !important;
+}
+
+/* 2) Custom-editor bottom actions: do not reserve an empty fourth slot. */
+.editor-bottom-actions{
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr)) !important;
+}
+.editor-bottom-actions button{
+  width:100% !important;
+  min-width:0 !important;
+}
+
+/* 3) Trait/tendency picker: keep ornament outside the text and rows consistent. */
+.profile-picker-backdrop{
+  padding:18px !important;
+}
+.profile-picker-modal{
+  width:min(760px,calc(100vw - 36px)) !important;
+  height:min(900px,calc(100dvh - 36px)) !important;
+  max-height:calc(100dvh - 36px) !important;
+  grid-template-rows:74px 44px minmax(0,1fr) 52px !important;
+  gap:8px !important;
+  padding:12px !important;
+  border-width:22px !important;
+  border-image:var(--editor2-modal) 145 fill / 22px / 0 stretch !important;
+}
+.profile-picker-header{
+  min-height:74px !important;
+  padding:10px 18px !important;
+  display:flex !important;
+  align-items:center !important;
+  overflow:hidden !important;
+}
+.profile-picker-header>div{
+  min-width:0 !important;
+  display:grid !important;
+  gap:1px !important;
+}
+.profile-picker-header .eyebrow{font-size:9px !important;line-height:1 !important;}
+.profile-picker-header h2{font-size:18px !important;line-height:1.15 !important;margin:2px 0 !important;}
+.profile-picker-header p{font-size:10px !important;line-height:1.15 !important;}
+.profile-picker-header>button{
+  flex:0 0 72px !important;
+  min-height:38px !important;
+  padding:6px 10px !important;
+}
+.profile-picker-search{
+  min-height:44px !important;
+  height:44px !important;
+  padding:8px 14px !important;
+  font-size:12px !important;
+}
+.profile-picker-list{
+  min-height:0 !important;
+  overflow-y:auto !important;
+  display:grid !important;
+  grid-auto-rows:minmax(84px,auto) !important;
+  align-content:start !important;
+  gap:6px !important;
+  padding:3px 6px 3px 2px !important;
+}
+.profile-option{
+  min-height:84px !important;
+  padding:12px 22px !important;
+  display:grid !important;
+  grid-template-rows:auto auto auto !important;
+  align-content:center !important;
+  gap:4px !important;
+  text-align:left !important;
+  background:var(--editor2-row) center/100% 100% no-repeat !important;
+  overflow:hidden !important;
+}
+.profile-option:hover,
+.profile-option.selected{
+  background-image:var(--editor2-row-selected) !important;
+}
+.profile-option-title{
+  min-height:20px !important;
+  padding:0 2px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+.profile-option-title strong{font-size:14px !important;line-height:1.15 !important;}
+.profile-option-title span{font-size:10px !important;line-height:1.15 !important;}
+.profile-option-title em{font-size:9px !important;line-height:1.15 !important;}
+.profile-option p{
+  margin:0 !important;
+  padding:0 2px !important;
+  font-size:10px !important;
+  line-height:1.4 !important;
+  white-space:normal !important;
+}
+.profile-option small{
+  padding:0 2px !important;
+  font-size:10px !important;
+  line-height:1.3 !important;
+  white-space:normal !important;
+}
+.profile-picker-footer{
+  min-height:52px !important;
+  padding:5px 4px 0 !important;
+  display:flex !important;
+  align-items:center !important;
+}
+.profile-picker-footer>button{
+  flex:0 0 110px !important;
+  min-height:42px !important;
+}
+
+/* 4) Item art: source board is landscape. Crop the blurred square padding away. */
+.item-preview-panel-v2 .item-preview-hero{
+  grid-template-columns:minmax(300px,48%) minmax(0,1fr) !important;
+  gap:14px !important;
+}
+.item-preview-art-frame-v2{
+  aspect-ratio:5 / 2 !important;
+  width:100% !important;
+  min-height:0 !important;
+  align-self:start !important;
+}
+.item-preview-art-frame-v2 img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+}
+.item-preview-art-frame-v2.contain-art img{
+  object-fit:contain !important;
+  background:#05090d !important;
+}
+.item-image-editor-preview img,
+.item-editor-list-v2 .item-editor-thumb img{
+  object-fit:cover !important;
+  object-position:center center !important;
+}
+.item-image-editor-preview.contain-art img{
+  object-fit:contain !important;
+}
+.item-preview-copy-v2{padding-top:3px !important;}
+.item-preview-copy-v2 h2{font-size:31px !important;}
+.item-preview-meta-v2>div{
+  min-height:34px !important;
+  padding:6px 9px !important;
+  grid-template-columns:92px minmax(0,1fr) !important;
+}
+
+/* Keep row hover/selected state readable without shifting the layout. */
+.item-editor-list-v2>button:hover{
+  background-image:var(--editor2-row-selected) !important;
+  transform:none !important;
+}
+.custom-editor-list-row:hover{
+  background-image:var(--editor2-row-selected) !important;
+  transform:none !important;
+}
+
+/* 5) Shared scrollbars: slimmer and aligned with the gold/navy skin. */
+.ornate-manager-screen .ornate-scroll,
+.ornate-manager-screen .profile-picker-list,
+.ornate-manager-screen .ornate-form-stack,
+.ornate-manager-screen .item-editor-edit-fieldset-v2,
+.ornate-manager-screen .custom-list-table-wrap .ornate-table{
+  scrollbar-width:thin !important;
+  scrollbar-color:#9b7837 #06111b !important;
+}
+.ornate-manager-screen .ornate-scroll::-webkit-scrollbar,
+.ornate-manager-screen .profile-picker-list::-webkit-scrollbar,
+.ornate-manager-screen .ornate-form-stack::-webkit-scrollbar,
+.ornate-manager-screen .item-editor-edit-fieldset-v2::-webkit-scrollbar,
+.ornate-manager-screen .custom-list-table-wrap .ornate-table::-webkit-scrollbar{width:8px !important;height:8px !important;}
+.ornate-manager-screen .ornate-scroll::-webkit-scrollbar-track,
+.ornate-manager-screen .profile-picker-list::-webkit-scrollbar-track,
+.ornate-manager-screen .ornate-form-stack::-webkit-scrollbar-track,
+.ornate-manager-screen .item-editor-edit-fieldset-v2::-webkit-scrollbar-track,
+.ornate-manager-screen .custom-list-table-wrap .ornate-table::-webkit-scrollbar-track{background:#06111b !important;}
+.ornate-manager-screen .ornate-scroll::-webkit-scrollbar-thumb,
+.ornate-manager-screen .profile-picker-list::-webkit-scrollbar-thumb,
+.ornate-manager-screen .ornate-form-stack::-webkit-scrollbar-thumb,
+.ornate-manager-screen .item-editor-edit-fieldset-v2::-webkit-scrollbar-thumb,
+.ornate-manager-screen .custom-list-table-wrap .ornate-table::-webkit-scrollbar-thumb{background:#9b7837 !important;border:2px solid #06111b !important;}
+
+@media(max-width:1180px){
+  .profile-picker-modal{width:min(720px,calc(100vw - 24px)) !important;}
+  .item-preview-panel-v2 .item-preview-hero{grid-template-columns:1fr !important;}
+  .item-preview-art-frame-v2{max-width:none !important;}
+}

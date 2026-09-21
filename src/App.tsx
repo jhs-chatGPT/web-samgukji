@@ -3871,7 +3871,7 @@ function App() {
           <section className="editor-ornate-card item-preview-panel item-preview-panel-v2">
             <div className="editor-card-head ornate-head"><strong>아이템 상세 정보</strong></div>
             <div className="item-preview-hero">
-              <div className="item-preview-art-frame item-preview-art-frame-v2">
+              <div className={`item-preview-art-frame item-preview-art-frame-v2 ${(customItemDraft.id === 'sky-halberd' || customItemDraft.imageDataUrl) ? 'contain-art' : ''}`}>
                 <img src={itemImagePath(customItemDraft)} alt={`${displayItemName} 이미지`} />
                 <span className="item-preview-badge">{viewingBaseItem ? (customItemDraft.unique ? '고유' : '기본') : '제작'}</span>
               </div>
@@ -3913,7 +3913,7 @@ function App() {
                 <section className="item-editor-subsection item-editor-image-section">
                   <div className="item-editor-subsection-title"><strong>아이콘 이미지</strong></div>
                   <div className="item-image-editor-row">
-                    <span className="item-image-editor-preview"><img src={itemImagePath(customItemDraft)} alt="" /></span>
+                    <span className={`item-image-editor-preview ${(customItemDraft.id === 'sky-halberd' || customItemDraft.imageDataUrl) ? 'contain-art' : ''}`}><img src={itemImagePath(customItemDraft)} alt="" /></span>
                     <div className="item-image-editor-actions">
                       <label className="item-image-upload-button"><span className="editor-inline-icon icon-edit" />이미지 변경<input type="file" accept="image/*" onChange={event => { handleCustomItemImageUpload(event.target.files?.[0]); event.currentTarget.value = ''; }} /></label>
                       <button type="button" onClick={() => setCustomItemDraft(current => ({ ...current, imageDataUrl: '' }))}>기본 이미지</button>

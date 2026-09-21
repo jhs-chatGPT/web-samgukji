@@ -4318,7 +4318,7 @@
   .item-preview-art-frame-v2{max-width:none !important;}
 }
 
-/* ===== v69-36 PRODUCT DESIGN TITLE SCREEN =====
+/* ===== v69-37 PRODUCT DESIGN TITLE SCREEN =====
    Final background + four reusable button-state assets supplied by the user.
    Do not redraw the background/title art in CSS. */
 .title-screen{
@@ -4366,7 +4366,7 @@
   position:relative !important;
   box-sizing:border-box !important;
   width:100% !important;
-  height:clamp(62px,7.25vh,78px) !important;
+  height:clamp(66px,7.6vh,82px) !important;
   min-height:0 !important;
   margin:0 !important;
   padding:0 52px !important;
@@ -4440,12 +4440,12 @@
   }
   .title-screen .title-menu button,
   .title-screen .title-menu .title-menu-primary{
-    height:clamp(54px,7vh,68px) !important;
+    height:clamp(58px,7.4vh,74px) !important;
     font-size:clamp(16px,3vw,21px) !important;
   }
 }
 @media(max-height:700px){
   .title-screen .title-menu{top:35% !important;gap:4px !important;}
   .title-screen .title-menu button,
-  .title-screen .title-menu .title-menu-primary{height:56px !important;}
+  .title-screen .title-menu .title-menu-primary{height:64px !important;}
 }

@@ -3806,7 +3806,7 @@ function App() {
           <button onClick={() => openItemEditor()}>아이템 에디터</button>
           <button onClick={() => setScreen('settings')}>설정</button>
         </div>
-        <div className="title-version">Ver. 0.69.36</div>
+        <div className="title-version">Ver. 0.69.37</div>
       </div>
     );
   }
